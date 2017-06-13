@@ -32,6 +32,7 @@ Configure the system to run the script `sams-fedora-messaging/start-update-handl
 
 ## Testing
 
-Edit the file `sams-fedora-messaging/sample/ingest-csv-and-metadata.sh` to set the correct domain name for the server.
-Run the script, to upload the sample CSV file and its associated CSV Metadata file.
+Edit the files `sample/create-container.sh` and `sample/ingest-csv-and-metadata.sh` to set the correct domain name for the server.
+Run the first script to create the "sources/trains" folder, and the second script to upload the sample CSV file and its associated CSV Metadata file.
+Each time the second script is run, the CSV file should be reconverted to RDF and stored in the SPARQL Graph Store.
 
