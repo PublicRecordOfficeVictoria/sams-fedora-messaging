@@ -1,5 +1,5 @@
 {
-	"@context": "http://fedora-dev.prov.vic.gov.au:8080/rest/sources/csvw.jsonld",
+	"@context": "http://www.w3.org/ns/csvw",
 	"url": "12800-sample.csv",
 	"dialect": {
 		"encoding": "utf-8"
