@@ -1,0 +1,13 @@
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<!-- Sample configuration file for Fedora Update Handler -->
+<!-- The properties included here are the defaults. -->
+<!-- See https://github.com/Conal-Tuohy/ands-la-trobe/tree/master/fedora-update-handler for details -->
+<properties version="1.0">
+	<entry key="java.naming.factory.initial">org.apache.activemq.jndi.ActiveMQInitialContextFactory</entry>
+	<entry key="java.naming.provider.url">failover://tcp://localhost:61616</entry>
+	<entry key="connection.factory.name">ConnectionFactory</entry>
+	<entry key="topic.fedora">fedora</entry>
+	<entry key="handler.jms.clientid">FedoraUpdateHandler</entry>
+	<entry key="handler.command">cat</entry>
+</properties>
+

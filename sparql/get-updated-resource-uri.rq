@@ -1,0 +1,10 @@
+# retrieve, from the graph called <data:,last-update-message> (which contains Fedora's last update message), the URI of the resource which
+# wasGeneratedBy an Activity (i.e. it was created by someone clicking the "update" button). This is the identifier of the resource that was changed.
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?updatedResourceURI 
+WHERE {
+	GRAPH <data:,last-update-message> {
+		?updatedResourceURI prov:wasGeneratedBy / rdf:type prov:Activity
+	}
+}

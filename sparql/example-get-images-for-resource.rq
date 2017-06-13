@@ -1,0 +1,10 @@
+# example
+# For a given PROV entity, find the fedora item which documents it, look through the contents of that item, and return the URIs of any files
+prefix ldp: <http://www.w3.org/ns/ldp#>
+prefix pcdm: <http://pcdm.org/models#>
+prefix crm: <http://www.cidoc-crm.org/Version/version-6.2#>
+select ?imageURL
+where {
+	<http://access.prov.vic.gov.au/public/component/daPublicBaseContainer?component=daViewUNIT&entityId=AAA_4003830718#>
+		^ crm:P70_documents / ldp:contains * / pcdm:hasFile ?imageURL
+}

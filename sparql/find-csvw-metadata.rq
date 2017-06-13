@@ -1,0 +1,20 @@
+# Find the CSVW metadata which describes the last updated resource (assuming it's a CSV file)
+# The graph called <data:,last-update-message> (which contains Fedora's last update message) contains the URI of the resource which
+# wasGeneratedBy an Activity (i.e. it was created by someone clicking the "update" button). This is the identifier of the resource that was changed.
+# The same resource is also described by a metadata graph which specifies its internet media type.
+# Return the URI of any CSVW resource which specifies that it applies to the CSV
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ebucore: <http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#>
+PREFIX csvw: <http://www.w3.org/ns/csvw#>
+SELECT ?csvwMetadata
+WHERE {
+	GRAPH <data:,last-update-message> {
+		?updatedResourceURI prov:wasGeneratedBy / rdf:type prov:Activity
+	}
+	?updatedResourceURI ebucore:hasMimeType ?mediaType.
+	FILTER(regex(?mediaType, "^text/csv(;.*)?")).
+	GRAPH ?csvwMetadata {
+		?csvwMetadata csvw:url ?updatedResourceURI
+	}
+}

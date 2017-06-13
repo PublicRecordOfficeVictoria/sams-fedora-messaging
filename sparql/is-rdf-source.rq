@@ -1,0 +1,13 @@
+# Determine if the last updated resource was an RDF Source (as opposed to a Non-RDF Source)
+# The graph called <data:,last-update-message> (which contains Fedora's last update message), contains the URI of the resource which
+# wasGeneratedBy an Activity (i.e. it was created by someone clicking the "update" button). This is the identifier of the resource that was changed.
+# The same resource is also described by a metadata graph which specifies whether it is an RDF Source or not. 
+PREFIX prov: <http://www.w3.org/ns/prov#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+ASK
+WHERE {
+	GRAPH <data:,last-update-message> {
+		?updatedResourceURI prov:wasGeneratedBy / rdf:type prov:Activity
+	}
+	?updatedResourceURI rdf:type <http://www.w3.org/ns/ldp#RDFSource>.
+}

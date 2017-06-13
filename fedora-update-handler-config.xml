@@ -1,0 +1,6 @@
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties version="1.0">
+	<entry key="topic.fedora">fedora</entry>
+	<entry key="handler.command">bash handle-update.sh</entry>
+</properties>
+
