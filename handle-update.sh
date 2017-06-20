@@ -1,6 +1,9 @@
 #!/bin/bash
 # handle a Fedora update message
 
+# set the location of Jena utilities s-put, s-update, etc.
+JENA_HOME=../apache-jena-fuseki-2.5.0
+
 function handleRDFSource() {
 		# download the graph and copy it to graph store
 		# download the updated resource from Fedora
@@ -9,7 +12,7 @@ function handleRDFSource() {
 		curl -s -S --header "Accept: application/rdf+xml" -o temp/updated-resource.rdf $updatedResourceURI
 		echo Storing resource graph in graph store as $updatedResourceURI
 		# save the updated resource as a named graph in SPARQL store
-		apache-jena-fuseki-2.5.0/bin/s-put http://localhost:8080/fuseki/prov/data $updatedResourceURI temp/updated-resource.rdf
+		$JENA_HOME/bin/s-put http://localhost:8080/fuseki/prov/data $updatedResourceURI temp/updated-resource.rdf
 }	
 
 function handleFedoraMetadata() {
@@ -18,7 +21,7 @@ function handleFedoraMetadata() {
 		curl -s -S --header "Accept: application/rdf+xml" -o temp/updated-resource.rdf $metadataURI
 		echo Updating resource graph in graph store as $metadataURI
 		# save the updated resource as a named graph in SPARQL store
-		apache-jena-fuseki-2.5.0/bin/s-put http://localhost:8080/fuseki/prov/data $metadataURI temp/updated-resource.rdf
+		$JENA_HOME/bin/s-put http://localhost:8080/fuseki/prov/data $metadataURI temp/updated-resource.rdf
 }	
 
 function handleCSV() {
@@ -26,7 +29,7 @@ function handleCSV() {
 			echo "Updated Fedora resource is CSV;  if a related CSVW metadata resource can be found, it will be used to extract RDF from this CSV"
 			# Check the SPARQL store to find associated CSVW metadata resource
 			# For now, assume only 1, though it might be worth allowing for multiple interpretations of a single CSV.
-			apache-jena-fuseki-2.5.0/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/find-csvw-metadata.rq | tail -n +2 > temp/csvw-metadata.csv
+			$JENA_HOME/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/find-csvw-metadata.rq | tail -n +2 > temp/csvw-metadata.csv
 			csvwMetadata=`cat temp/csvw-metadata.csv | tr -d '[:space:]'`
 			# execute CSV2RDF to generate RDF, deposit RDF in graph store
 			# e.g.
@@ -38,7 +41,7 @@ function handleCSV() {
 				csv2rdf --schema=$csvwMetadata > temp/csv-rdf.ttl
 				# save data extracted from the CSV as a named graph in SPARQL store, named by the URI of the metadata resource which was used to extract it
 				echo "Storing CSV-derived RDF in graph store as $csvwMetadata"
-				apache-jena-fuseki-2.5.0/bin/s-put http://localhost:8080/fuseki/prov/data $csvwMetadata temp/csv-rdf.ttl
+				$JENA_HOME/bin/s-put http://localhost:8080/fuseki/prov/data $csvwMetadata temp/csv-rdf.ttl
 				#TODO append Provenance metadata describing the csv2rdf conversion  
 			fi
 }	
@@ -52,7 +55,7 @@ function handleCSVM() {
 			rdfconvert-0.4/bin/rdfconvert.sh -i JSON-LD -o RDF/XML temp/updated-resource.jsonld temp/updated-resource.rdf
 			# Store the CSVM in the SPARQL store
 			echo "Storing CSVM resource in graph store"
-			apache-jena-fuseki-2.5.0/bin/s-put http://localhost:8080/fuseki/prov/data $updatedResourceURI temp/updated-resource.rdf
+			$JENA_HOME/bin/s-put http://localhost:8080/fuseki/prov/data $updatedResourceURI temp/updated-resource.rdf
 
 			# execute CSV2RDF to generate RDF, deposit RDF in graph store
 			# e.g.
@@ -65,7 +68,7 @@ function handleCSVM() {
 			# FIXME use the URI of the CSV as the name of the graph, or better yet, a URI that combines both the CSV and CSVM URIs.
 			# Note: 
 			echo Storing CSV-derived RDF in graph store as $updatedResourceURI
-			apache-jena-fuseki-2.5.0/bin/s-put http://localhost:8080/fuseki/prov/data $updatedResourceURI temp/csv-rdf.ttl
+			$JENA_HOME/bin/s-put http://localhost:8080/fuseki/prov/data $updatedResourceURI temp/csv-rdf.ttl
 			#TODO append Provenance metadata describing the csv2rdf conversion  
 }	
 
@@ -83,7 +86,7 @@ rdfconvert-0.4/bin/rdfconvert.sh -i JSON-LD -o RDF/XML temp/update-message.jsonl
 
 # Store the update in the SPARQL store
 echo Storing update event in graph store
-apache-jena-fuseki-2.5.0/bin/s-put http://localhost:8080/fuseki/prov/data data:,last-update-message temp/update-message.rdf
+$JENA_HOME/bin/s-put http://localhost:8080/fuseki/prov/data data:,last-update-message temp/update-message.rdf
 
 # Now examine the update and take the appropriate action
 
@@ -92,14 +95,14 @@ apache-jena-fuseki-2.5.0/bin/s-put http://localhost:8080/fuseki/prov/data data:,
 # event:ResourceDeletion - DELETE corresponding graph from SPARQL store
 # event:ResourceCreation and event:ResourceModification - obtain new resource graph and PUT into SPARQL store
 # event:ResourceRelocation - combine DELETE and PUT new resource graph
-apache-jena-fuseki-2.5.0/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/get-event-type.rq | tail -n +2 > temp/event-type.csv
+$JENA_HOME/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/get-event-type.rq | tail -n +2 > temp/event-type.csv
 # strip white space from file, leaving just the URI
 eventType=`cat temp/event-type.csv | tr -d '[:space:]'` 
 echo Type of event is: $eventType
 
 # find the URI of the resource which was updated; this is the resource which prov:wasGeneratedBy a prov:Activity
 # issue the sparql query, retrieve CSV, and discard the header row
-apache-jena-fuseki-2.5.0/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/get-updated-resource-uri.rq | tail -n +2 > temp/updated-resource-uri.csv
+$JENA_HOME/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/get-updated-resource-uri.rq | tail -n +2 > temp/updated-resource-uri.csv
 
 # strip white space from file, leaving just the URI
 updatedResourceURI=`cat temp/updated-resource-uri.csv | tr -d '[:space:]'` 
@@ -107,12 +110,12 @@ updatedResourceURI=`cat temp/updated-resource-uri.csv | tr -d '[:space:]'`
 # If the event was a deletion, then delete the corresponding graph from the graph store
 if [ "$eventType" = "http://fedora.info/definitions/v4/event#ResourceDeletion" ]; then
 	echo Purging resource graph from graph store at $updatedResourceURI
-	apache-jena-fuseki-2.5.0/bin/s-delete http://localhost:8080/fuseki/prov/data $updatedResourceURI 
+	$JENA_HOME/bin/s-delete http://localhost:8080/fuseki/prov/data $updatedResourceURI 
 elif [[ "$eventType" = "http://fedora.info/definitions/v4/event#ResourceCreation" || "$eventType" = "http://fedora.info/definitions/v4/event#ResourceModification" ]]; then 
 	# Fedora resource was created or updated; need to mirror the new content to the graph store
 	# The updated resource may be a Linked Data Platform RDFSource (e.g. a Fedora container or item), 
 	# or it may be a NonRDFSource; some kind of binary object
-	apache-jena-fuseki-2.5.0/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/is-rdf-source.rq | tail -n +2 > temp/updated-resource-is-rdf.csv
+	$JENA_HOME/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/is-rdf-source.rq | tail -n +2 > temp/updated-resource-is-rdf.csv
 	isRDFSource=`cat temp/updated-resource-is-rdf.csv | tr -d '[:space:]'` 
 	if [ "$isRDFSource" = "true" ]; then
 		handleRDFSource
@@ -129,7 +132,7 @@ elif [[ "$eventType" = "http://fedora.info/definitions/v4/event#ResourceCreation
 		# • A CSV file contains information that can be represented in RDF.
 		# • A CSV on the Web metadata file (application/csvm+json) is itself RDF
 		# • A CSV on the Web metadata file (application/csvm+json) also contains instructions for extracting RDF from an associated CSV file
-		apache-jena-fuseki-2.5.0/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/get-media-type.rq | tail -n +2 > temp/media-type.csv
+		$JENA_HOME/bin/s-query --output=csv --service=http://localhost:8080/fuseki/prov/query --query=sparql/get-media-type.rq | tail -n +2 > temp/media-type.csv
 		mediaType=`cat temp/media-type.csv | tr -d '[:space:]'`
 		#TODO "text/csv" mediaType will include a character encoding suffix - check regex works here
 		if [[ "$mediaType" =~ "^text/csv(;.*)?" ]]; then
