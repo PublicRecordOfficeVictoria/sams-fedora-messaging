@@ -38,7 +38,11 @@ function handleCSV() {
 				echo "Cannot find a metadata resource with which to extract RDF from resource $updateResourceURI"
 			else
 				echo "The CSV resource has a related CSVW metadata resource at $csvwMetadata"
-				csv2rdf --schema=$csvwMetadata > temp/csv-rdf.ttl
+				csv2rdf --schema=$csvwMetadata > temp/raw-csv-rdf.ttl
+
+				#remove validation comments from the turtle file output by csv2rdf
+				sed '0,/^@/ {/^[^@]/ d}' temp/raw-csv-rdf.ttl > temp/csv-rdf.ttl
+
 				# save data extracted from the CSV as a named graph in SPARQL store, named by the URI of the metadata resource which was used to extract it
 				echo "Storing CSV-derived RDF in graph store as $csvwMetadata"
 				$JENA_HOME/bin/s-put http://localhost:8080/fuseki/prov/data $csvwMetadata temp/csv-rdf.ttl
@@ -61,9 +65,12 @@ function handleCSVM() {
 			# e.g.
 			# csv2rdf --schema=http://fedora-dev.prov.vic.gov.au:8080/rest/sources/trains/trains-schema.jsonld > csv-rdf.ttl
 			# The metadata file must refer to a locally-patched CSVW context because the standard context contains a bug:  https://github.com/w3c/csvw/issues/849
-			csv2rdf --schema=$updatedResourceURI > temp/csv-rdf.ttl
+			csv2rdf --schema=$updatedResourceURI > temp/raw-csv-rdf.ttl
 			#TODO error handling: what if the linked CSV is not found, or an error occurs in generation?
-			
+
+			#remove validation comments from the turtle file output by csv2rdf
+			sed '0,/^@/ {/^[^@]/ d}' temp/raw-csv-rdf.ttl > temp/csv-rdf.ttl
+
 			# save data extracted from the CSV as a named graph in SPARQL store
 			# FIXME use the URI of the CSV as the name of the graph, or better yet, a URI that combines both the CSV and CSVM URIs.
 			# Note: 
