@@ -1,6 +1,8 @@
 # The graph called <data:,last-update-message> (which contains Fedora's last update message) contains a notification about a resource which
 # wasGeneratedBy an Activity (e.g. by someone clicking the "update" button in Fedora's UI, or uploading a file via curl, etc). 
 # Fedora classifies the Activity as either a modification, creation, deletion, or move.
+# Since an Activity can be both a modification and a creation, and since we handle the two
+# identically, we limit the ?eventType returned to a single row.
 PREFIX prov: <http://www.w3.org/ns/prov#> 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX event: <http://fedora.info/definitions/v4/event#>
@@ -11,3 +13,4 @@ WHERE {
 		FILTER(?eventType IN (event:ResourceModification, event:ResourceDeletion, event:ResourceCreation, event:ResourceRelocation))
 	}
 }
+LIMIT 1
